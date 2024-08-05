@@ -21,8 +21,11 @@ import {
 
 export default function Home() {
   const [inventory, setInventory] = useState([]);
+  const [filterInventory, setFilterInventory] = useState([]);
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState(false);
   const [itemName, setItemName] = useState("");
+  const [searchName, setSearchName] = useState("");
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, "inventory"));
@@ -56,7 +59,7 @@ export default function Home() {
   };
 
   const addItem = async (item) => {
-    const docRef = doc(collection(firestore, "inventory"), item);
+    const docRef = doc(collection(firestore, "inventory"), item.toLowerCase());
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
@@ -75,6 +78,24 @@ export default function Home() {
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+
+  function searchItem(item){
+    const filteredList = [];
+
+    if(item.length > 0){
+      inventory.map(({name, quantity}) => {
+        if(name.includes(item.toLowerCase())){
+          filteredList.push({name, quantity})
+        }
+      });
+      setSearch(true);
+      setFilterInventory(filteredList);
+    }
+    else{
+      setSearch(false);
+      setFilterInventory(filteredList);
+    }
+  }
 
   return (
     <Box
@@ -126,6 +147,15 @@ export default function Home() {
           </Stack>
         </Box>
       </Modal>
+      <TextField 
+        variant="outlined" 
+        label="Search"
+        value = {searchName}
+        onChange={(e) => {
+          setSearchName(e.target.value);
+          searchItem(e.target.value);
+        }}
+        ></TextField>
       <Button
         variant="contained"
         onClick={() => {
@@ -148,7 +178,7 @@ export default function Home() {
           </Typography>
         </Box>
         <Stack width="800px" height="300px" spacing={2} overflow="auto">
-          {inventory.map(({ name, quantity }) => (
+          {(search ? filterInventory : inventory).map(({ name, quantity }) => (
             <Box
               key={name}
               width="100%"
