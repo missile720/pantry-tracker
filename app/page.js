@@ -1,15 +1,13 @@
 "use client";
 
-import {
-  Box,
-  Typography,
-  Button
-} from "@mui/material";
+import { Box, Typography, Button } from "@mui/material";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
 
-  function authorizationPage(){
-    
+  function authorizationPage() {
+    router.push("/authorization");
   }
 
   return (
@@ -20,7 +18,6 @@ export default function Home() {
       flexDirection="column"
       justifyContent="center"
       alignContent="center"
-      bgcolor="#F5F5DC"
     >
       <Box
         position="absolute"
@@ -35,10 +32,14 @@ export default function Home() {
         alignItems="center"
         flexWrap="wrap"
       >
-        <Typography variant="h1" textAlign="center" fontSize="max(8vw, 56px)">Smart Pantry</Typography>
-        <Typography variant="h4" textAlign="center" fontSize="max(2vw, 14px)">Smart Solutions for Your Pantry Needs</Typography>
+        <Typography variant="h1" textAlign="center" fontSize="max(8vw, 56px)">
+          Smart Pantry
+        </Typography>
+        <Typography variant="h4" textAlign="center" fontSize="max(2vw, 14px)">
+          Smart Solutions for Your Pantry Needs
+        </Typography>
       </Box>
-      <Box 
+      <Box
         position="absolute"
         top="55%"
         left="50%"
@@ -46,18 +47,20 @@ export default function Home() {
           transform: "translate(-50%,-50%)",
         }}
       >
-      <Button 
-        variant="contained" 
-        sx={{
-          bgcolor: "#4CAF50",
-          color: "#000000",
-          fontWeight: "600",
-          "&:hover": {
-            bgcolor: "#FF9800",
-          }
-        }}
-        onClick={() => authorizationPage()}
-      >Enter</Button>
+        <Button
+          variant="contained"
+          sx={{
+            bgcolor: "#4CAF50",
+            color: "#000000",
+            fontWeight: "600",
+            "&:hover": {
+              bgcolor: "#FF9800",
+            },
+          }}
+          onClick={() => authorizationPage()}
+        >
+          Enter
+        </Button>
       </Box>
     </Box>
   );

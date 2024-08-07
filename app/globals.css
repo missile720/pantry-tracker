@@ -3,3 +3,12 @@
   padding: 0;
   margin: 0;
 }
+
+body{
+  background-color: #C0B9DD;
+  background-image: url(../public/apple.png), url(../public/lemon-slice.png);
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: 0px 0px, 100% 100%;
+  background-blend-mode: overlay;
+}
