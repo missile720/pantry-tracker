@@ -1,23 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/context/authContext";
 import { firestore } from "@/firebase";
-import {
-  Box,
-  Modal,
-  Typography,
-  Stack,
-  TextField,
-  Button,
-} from "@mui/material";
-import {
-  collection,
-  getDocs,
-  getDoc,
-  query,
-  doc,
-  deleteDoc,
-  setDoc,
-} from "firebase/firestore";
+import { Box, Modal, Typography, Stack, TextField, Button} from "@mui/material";
+import { collection, getDocs, getDoc, query, doc, deleteDoc, setDoc} from "firebase/firestore";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [inventory, setInventory] = useState([]);
@@ -26,6 +13,27 @@ export default function Home() {
   const [search, setSearch] = useState(false);
   const [itemName, setItemName] = useState("");
   const [searchName, setSearchName] = useState("");
+  const { currentUser, loading } = useAuth();
+  const [userData, setUserData] = useState(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !currentUser) {
+      // If user is not logged in, redirect to the login page
+      router.push("/login");
+    } else if (currentUser) {
+      // Fetch user-specific data from Firestore
+      const fetchUserData = async () => {
+        const userDoc = await getDoc(doc(firestore, "users", currentUser.uid));
+        if (userDoc.exists()) {
+          setUserData(userDoc.data());
+        } else {
+          console.log("No such document!");
+        }
+      };
+      fetchUserData();
+    }
+  }, [currentUser, loading, router]);
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, "inventory"));
@@ -41,6 +49,14 @@ export default function Home() {
 
     setInventory(inventoryList);
   };
+
+  useEffect(() => {
+    updateInventory();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   const removeItem = async (item) => {
     const docRef = doc(collection(firestore, "inventory"), item);
@@ -71,10 +87,6 @@ export default function Home() {
 
     await updateInventory();
   };
-
-  useEffect(() => {
-    updateInventory();
-  }, []);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
