@@ -1,8 +1,10 @@
 "use client";
 import { Box, Button, TextField, Typography } from "@mui/material";
-import { auth } from "@/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth, firestore } from "@/firebase";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function AuthorizationPage() {
   const [formData, setFormData] = useState({
@@ -12,6 +14,7 @@ export default function AuthorizationPage() {
   });
   const [signUp, setSignUp] = useState(false);
   const [passwordMatch, setPasswordMatch] = useState(false);
+  const router = useRouter();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,18 +34,39 @@ export default function AuthorizationPage() {
       } //minimum length requirement for firebase
       else if (formData.password.length < 6) {
         setPasswordLength(true);
-      }
-      else {
+      } else {
         //create new user
         try {
-          const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+          const userCredential = await createUserWithEmailAndPassword(
+            auth,
+            formData.email,
+            formData.password
+          );
           const user = userCredential.user;
-          console.log(user);
+
+          await setDoc(doc(firestore, "users", user.uid), {
+            email: formData.email,
+          });
+
+          router.push("/pantry");
         } catch (error) {
-          console.error('Error signing up:', error.code, error.message);
+          console.error("Error signing up:", error.code, error.message);
         }
       }
     } else {
+      //login user
+      try {
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          formData.email,
+          formData.password
+        );
+        const user = userCredential.user;
+
+        router.push("/pantry");
+      } catch (error) {
+        console.error("Error signing up:", error.code, error.message);
+      }
     }
   };
 
