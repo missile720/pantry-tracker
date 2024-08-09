@@ -114,7 +114,7 @@ export default function AuthorizationPage() {
               variant="outlined"
               sx={{
                 bgcolor: "#C0B9DD",
-                borderRadius: "5px",
+                borderRadius: "5px"
               }}
               required
               fullWidth

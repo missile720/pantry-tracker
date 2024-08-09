@@ -1,9 +1,25 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/authContext";
-import { firestore } from "@/firebase";
-import { Box, Modal, Typography, Stack, TextField, Button} from "@mui/material";
-import { collection, getDocs, getDoc, query, doc, deleteDoc, setDoc} from "firebase/firestore";
+import { auth, firestore } from "@/firebase";
+import { signOut } from "firebase/auth";
+import {
+  Box,
+  Modal,
+  Typography,
+  Stack,
+  TextField,
+  Button,
+} from "@mui/material";
+import {
+  collection,
+  getDocs,
+  getDoc,
+  query,
+  doc,
+  deleteDoc,
+  setDoc,
+} from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -20,7 +36,7 @@ export default function Home() {
   useEffect(() => {
     if (!loading && !currentUser) {
       // If user is not logged in, redirect to the login page
-      router.push("/login");
+      router.push("/authorization");
     } else if (currentUser) {
       // Fetch user-specific data from Firestore
       const fetchUserData = async () => {
@@ -35,8 +51,23 @@ export default function Home() {
     }
   }, [currentUser, loading, router]);
 
+  const handleLogOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Error signing out:", error.code, error.message);
+    }
+  };
+
   const updateInventory = async () => {
-    const snapshot = query(collection(firestore, "inventory"));
+    if (!currentUser) return;
+    const userPantryRef = collection(
+      firestore,
+      "users",
+      currentUser.uid,
+      "pantry"
+    );
+    const snapshot = query(userPantryRef);
     const docs = await getDocs(snapshot);
     const inventoryList = [];
 
@@ -54,20 +85,36 @@ export default function Home() {
     updateInventory();
   }, []);
 
+  useEffect(() => {
+    if (searchName.length > 0) {
+      searchItem(searchName);
+    }
+  }, [inventory, searchName]);
+
   if (loading) {
     return <div>Loading...</div>;
   }
 
   const removeItem = async (item) => {
-    const docRef = doc(collection(firestore, "inventory"), item);
+    if (!currentUser) return;
+
+    const userPantryRef = collection(
+      firestore,
+      "users",
+      currentUser.uid,
+      "pantry"
+    );
+    const docRef = doc(userPantryRef, item.toLowerCase());
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
       const { quantity } = docSnap.data();
       if (quantity === 1) {
+        // If the quantity is 1, delete the document
         await deleteDoc(docRef);
       } else {
-        await setDoc(docRef, { quantity: quantity - 1 });
+        // Otherwise, decrease the quantity by 1
+        await setDoc(docRef, { quantity: quantity - 1 }, { merge: true });
       }
     }
 
@@ -75,12 +122,20 @@ export default function Home() {
   };
 
   const addItem = async (item) => {
-    const docRef = doc(collection(firestore, "inventory"), item.toLowerCase());
+    if (!currentUser) return;
+  
+    const userInventoryRef = collection(
+      firestore,
+      "users",
+      currentUser.uid,
+      "pantry"
+    );
+    const docRef = doc(userInventoryRef, item.toLowerCase());
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
       const { quantity } = docSnap.data();
-      await setDoc(docRef, { quantity: quantity + 1 });
+      await setDoc(docRef, { quantity: quantity + 1 }, { merge: true });
     } else {
       await setDoc(docRef, { quantity: 1 });
     }
@@ -91,19 +146,18 @@ export default function Home() {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  function searchItem(item){
+  function searchItem(item) {
     const filteredList = [];
 
-    if(item.length > 0){
-      inventory.map(({name, quantity}) => {
-        if(name.includes(item.toLowerCase())){
-          filteredList.push({name, quantity})
+    if (item.length > 0) {
+      inventory.map(({ name, quantity }) => {
+        if (name.includes(item.toLowerCase())) {
+          filteredList.push({ name, quantity });
         }
       });
       setSearch(true);
       setFilterInventory(filteredList);
-    }
-    else{
+    } else {
       setSearch(false);
       setFilterInventory(filteredList);
     }
@@ -124,9 +178,9 @@ export default function Home() {
           position="absolute"
           top="50%"
           left="50%"
-          width={400}
-          bgcolor="white"
-          border="2px solid #000"
+          width={360}
+          bgcolor="#F5F5DC"
+          borderRadius={5}
           boxShadow={24}
           p={4}
           display="flex"
@@ -141,13 +195,23 @@ export default function Home() {
             <TextField
               variant="outlined"
               fullWidth
+              sx={{ bgcolor: "#C0B9DD", borderRadius: "5px" }}
               value={itemName}
+              label="Item name"
               onChange={(e) => {
                 setItemName(e.target.value);
               }}
             ></TextField>
             <Button
-              variant="outlined"
+              variant="contained"
+              sx={{
+                bgcolor: "#4CAF50",
+                color: "#000000",
+                fontWeight: "600",
+                "&:hover": {
+                  bgcolor: "#FF9800",
+                },
+              }}
               onClick={() => {
                 addItem(itemName);
                 setItemName("");
@@ -159,70 +223,129 @@ export default function Home() {
           </Stack>
         </Box>
       </Modal>
-      <TextField 
-        variant="outlined" 
-        label="Search"
-        value = {searchName}
-        onChange={(e) => {
-          setSearchName(e.target.value);
-          searchItem(e.target.value);
-        }}
-        ></TextField>
-      <Button
-        variant="contained"
-        onClick={() => {
-          handleOpen();
-        }}
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        width="max(50vw,355px)"
+        bgcolor="#F5F5DC"
+        p={2}
+        borderRadius={5}
       >
-        Add New Item
-      </Button>
-      <Box border="1px solid #333">
+        <Button
+          variant="contained"
+          sx={{
+            bgcolor: "#4CAF50",
+            fontSize: "max(1vw, 10px)",
+            color: "#000000",
+            fontWeight: "600",
+            "&:hover": {
+              bgcolor: "#FF9800",
+            },
+          }}
+          onClick={() => {
+            handleOpen();
+          }}
+        >
+          Add New Item
+        </Button>
+        <TextField
+          variant="outlined"
+          sx={{ bgcolor: "#C0B9DD", borderRadius: "5px", width: "40%" }}
+          label="Search"
+          value={searchName}
+          onChange={(e) => {
+            setSearchName(e.target.value);
+            searchItem(e.target.value);
+          }}
+        ></TextField>
+        <Button
+          variant="contained"
+          sx={{
+            bgcolor: "#4CAF50",
+            fontSize: "max(1vw, 10px)",
+            color: "#000000",
+            fontWeight: "600",
+            "&:hover": {
+              bgcolor: "#FF9800",
+            },
+          }}
+          onClick={() => {
+            handleLogOut();
+          }}
+        >
+          Log out
+        </Button>
+      </Box>
+      <Box sx={{border:1}} bgcolor="#F5F5DC">
         <Box
-          width="800px"
+          width="max(50vw,355px)"
           height="100px"
-          bgcolor="#ADD8E6"
+          bgcolor="#F5F5DC"
           display="flex"
           alignItems="center"
           justifyContent="center"
+          mb={1}
+          sx={{ borderBottom: 1 }}
         >
-          <Typography variant="h2" color="#333">
-            Inventory Items
+          <Typography variant="h2" fontSize="max(4vw, 50px)">
+            Pantry Items
           </Typography>
         </Box>
-        <Stack width="800px" height="300px" spacing={2} overflow="auto">
+        <Stack
+          width="max(50vw,355px)"
+          height="300px"
+          spacing={1}
+          overflow="auto"
+        >
           {(search ? filterInventory : inventory).map(({ name, quantity }) => (
             <Box
               key={name}
               width="100%"
-              minHeight="150px"
+              minHeight="80px"
               display="flex"
               alignItems="center"
               justifyContent="space-between"
-              bgcolor="f0f0f0"
-              padding={5}
+              bgcolor="#F5F5DC"
+              padding={1}
             >
-              <Typography variant="h3" color="#333" textAlign="center">
+              <Typography variant="h5" color="#333" textAlign="center">
                 {name.charAt(0).toUpperCase() + name.slice(1)}
               </Typography>
-              <Typography variant="h3" color="#333" textAlign="center">
+              <Typography variant="h5" color="#333" textAlign="center">
                 {quantity}
               </Typography>
               <Stack direction="row" spacing={2}>
                 <Button
                   variant="contained"
+                  sx={{
+                    bgcolor: "#4CAF50",
+                    color: "#000000",
+                    fontWeight: "600",
+                    "&:hover": {
+                      bgcolor: "#FF9800",
+                    },
+                  }}
                   onClick={() => {
                     addItem(name);
                   }}
                 >
-                  Add
+                  +
                 </Button>
                 <Button
                   variant="contained"
+                  sx={{
+                    bgcolor: "#4CAF50",
+                    color: "#000000",
+                    fontWeight: "600",
+                    "&:hover": {
+                      bgcolor: "#FF9800",
+                    },
+                  }}
                   onClick={() => {
                     removeItem(name);
                   }}
                 >
-                  Remove
+                  -
                 </Button>
               </Stack>
             </Box>
