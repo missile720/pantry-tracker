@@ -424,7 +424,7 @@ export default function Home() {
             {recipes && (
               <Typography>{recipes}</Typography>
             )}
-            {error && <div className="error-message">{error}</div>}
+            {error && <Typography color="red">{error}</Typography>}
           </Stack>
         </Box>
       </Modal>

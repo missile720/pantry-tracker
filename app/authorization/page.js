@@ -14,6 +14,7 @@ export default function AuthorizationPage() {
   });
   const [signUp, setSignUp] = useState(false);
   const [passwordMatch, setPasswordMatch] = useState(false);
+  const [passwordLength, setPasswordLength] = useState(false);
   const router = useRouter();
 
   const handleChange = (e) => {
@@ -156,6 +157,9 @@ export default function AuthorizationPage() {
                 ></TextField>
                 {passwordMatch && (
                   <Typography color="red">Passwords do not match!</Typography>
+                )}
+                {passwordLength && (
+                  <Typography color="red">Password must be at least 6 characters long</Typography>
                 )}
               </>
             )}
