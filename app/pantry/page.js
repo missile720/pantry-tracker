@@ -22,16 +22,21 @@ import {
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
+
 export default function Home() {
   const [inventory, setInventory] = useState([]);
   const [filterInventory, setFilterInventory] = useState([]);
   const [open, setOpen] = useState(false);
+  const [openRecipe, setOpenRecipe] = useState(false);
   const [search, setSearch] = useState(false);
   const [itemName, setItemName] = useState("");
   const [searchName, setSearchName] = useState("");
   const { currentUser, loading } = useAuth();
   const [userData, setUserData] = useState(null);
+  const [recipes, setRecipes] = useState("");
+  const [loadingState, setLoadingState] = useState(false);
   const router = useRouter();
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!loading && !currentUser) {
@@ -123,7 +128,7 @@ export default function Home() {
 
   const addItem = async (item) => {
     if (!currentUser) return;
-  
+
     const userInventoryRef = collection(
       firestore,
       "users",
@@ -145,6 +150,33 @@ export default function Home() {
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+  const handleOpenRecipe = async () => {
+    setOpenRecipe(true);
+    setLoadingState(true);
+    try {
+      const response = await fetch('/api/getRecipeSuggestions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ inventory }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Network response was not ok');
+      }
+  
+      const data = await response.json();
+      setRecipes(data.recipeSuggestion);
+    } catch (error) {
+      console.error('Error fetching recipe:', error);
+      setError(error.message);
+    } finally {
+      setLoadingState(false);
+    }
+  }
+  const handleCloseRecipe = () => setOpenRecipe(false);
 
   function searchItem(item) {
     const filteredList = [];
@@ -185,6 +217,7 @@ export default function Home() {
           p={4}
           display="flex"
           flexDirection="column"
+          textAlign="center"
           gap={3}
           sx={{
             transform: "translate(-50%,-50%)",
@@ -276,7 +309,7 @@ export default function Home() {
           Log out
         </Button>
       </Box>
-      <Box sx={{border:1}} bgcolor="#F5F5DC">
+      <Box sx={{ border: 1 }} bgcolor="#F5F5DC">
         <Box
           width="max(50vw,355px)"
           height="100px"
@@ -352,6 +385,49 @@ export default function Home() {
           ))}
         </Stack>
       </Box>
+      <Button
+        variant="contained"
+        sx={{
+          bgcolor: "#4CAF50",
+          color: "#000000",
+          fontWeight: "600",
+          "&:hover": {
+            bgcolor: "#FF9800",
+          },
+        }}
+        onClick={() => {
+          handleOpenRecipe();
+        }}
+      >
+        Recipe Suggestion
+      </Button>
+      <Modal open={openRecipe} onClose={handleCloseRecipe}>
+        <Box
+          position="absolute"
+          top="50%"
+          left="50%"
+          width={360}
+          bgcolor="#F5F5DC"
+          borderRadius={5}
+          boxShadow={24}
+          p={4}
+          display="flex"
+          textAlign="center"
+          flexDirection="column"
+          gap={3}
+          sx={{
+            transform: "translate(-50%,-50%)",
+          }}
+        >
+          <Typography variant="h6">{loading ? "Fetching Recipes..." : "Recipe Suggestions"}</Typography>
+          <Stack width="100%" direction="row" spacing={2}>
+            {recipes && (
+              <Typography>{recipes}</Typography>
+            )}
+            {error && <div className="error-message">{error}</div>}
+          </Stack>
+        </Box>
+      </Modal>
     </Box>
   );
 }
