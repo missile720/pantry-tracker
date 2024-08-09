@@ -85,6 +85,12 @@ export default function Home() {
     updateInventory();
   }, []);
 
+  useEffect(() => {
+    if (searchName.length > 0) {
+      searchItem(searchName);
+    }
+  }, [inventory, searchName]);
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -279,6 +285,7 @@ export default function Home() {
           alignItems="center"
           justifyContent="center"
           mb={1}
+          sx={{ borderBottom: 1 }}
         >
           <Typography variant="h2" fontSize="max(4vw, 50px)">
             Pantry Items
@@ -287,7 +294,7 @@ export default function Home() {
         <Stack
           width="max(50vw,355px)"
           height="300px"
-          spacing={2}
+          spacing={1}
           overflow="auto"
         >
           {(search ? filterInventory : inventory).map(({ name, quantity }) => (
