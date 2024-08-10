@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { OpenAI } from "openai";
 
 const openai = new OpenAI({
-  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.NEXT_PUBLIC_OPENROUTER_API_KEY
 });
 
 export async function POST(req) {
@@ -11,12 +12,16 @@ export async function POST(req) {
     const inventoryList = inventory.map((item) => item.name).join(", ");
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [{role: "user", content: `I have the following items: ${inventoryList}. What recipes can I make?`}],
-      max_tokens: 150,
+      model: "meta-llama/llama-3.1-8b-instruct:free",
+      messages: [{role: "user", content: `Format the response so its easy to read. I have the following ingredients: ${inventoryList}. Generate one recipe in the following format:
+        Recipe Name
+        Ingredients
+        Instructions
+        `}],
+      max_tokens: 13100,
     });
 
-    const recipeSuggestion = response.data.choices[0].message.content;
+    const recipeSuggestion = response.choices[0].message.content;
 
     return NextResponse.json({ recipeSuggestion });
   } catch (error) {

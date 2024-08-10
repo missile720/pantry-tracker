@@ -169,6 +169,7 @@ export default function Home() {
   
       const data = await response.json();
       setRecipes(data.recipeSuggestion);
+      setError("");
     } catch (error) {
       console.error('Error fetching recipe:', error);
       setError(error.message);
@@ -176,7 +177,10 @@ export default function Home() {
       setLoadingState(false);
     }
   }
-  const handleCloseRecipe = () => setOpenRecipe(false);
+  const handleCloseRecipe = () => {
+    setOpenRecipe(false);
+    setRecipes("");
+  }
 
   function searchItem(item) {
     const filteredList = [];
@@ -420,7 +424,8 @@ export default function Home() {
           }}
         >
           <Typography variant="h6">{loading ? "Fetching Recipes..." : "Recipe Suggestions"}</Typography>
-          <Stack width="100%" direction="row" spacing={2}>
+          <Stack width="100%" direction="row" spacing={2} height="300px"
+          overflow="auto">
             {recipes && (
               <Typography>{recipes}</Typography>
             )}
