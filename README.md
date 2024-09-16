@@ -1,3 +1,31 @@
+# [smartPantry](https://smart-pantry-khaki.vercel.app/)
+
+![smartPantry](https://github.com/user-attachments/assets/6b25f19c-55fb-4f17-a2ba-dfb812fd9bf1)
+
+
+## Description
+Pantry tracker that allows users to virtually store their ingredients. They can also get AI recommended recipe based on their ingredients
+
+## Technologies Used:
+![Firebase](https://img.shields.io/badge/firebase-ffca28?style=for-the-badge&logo=firebase&logoColor=black)
+![Next.js](https://img.shields.io/badge/next%20js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
+![MaterialUI](https://img.shields.io/badge/Material%20UI-007FFF?style=for-the-badge&logo=mui&logoColor=white)
+![vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+
+## Optimizations
+In the future add the ability to use the camera to add ingredients
+
+## Lessons Learned:
+I learned about Next.js as well using firebase authentication for user login/signup. Also learned how to implement AI to create the recipes.
+
+## Features
+- Responsive design for all screen sizes
+- Home screen
+- Login/Signup screen
+- Pantry tracker
+- AI recipes
+
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
