@@ -85,7 +85,7 @@ export default function AuthorizationPage() {
       alignItems="center"
     >
       <Box
-        width="max(50vw,300px)"
+        width="max(30vw,300px)"
         height={signUp ? 500 : 430}
         borderRadius={5}
         bgcolor="#F5F5DC"

@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/authContext";
 import { auth, firestore } from "@/firebase";
 import { signOut } from "firebase/auth";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Box,
   Modal,
@@ -21,7 +23,6 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-
 
 export default function Home() {
   const [inventory, setInventory] = useState([]);
@@ -99,6 +100,9 @@ export default function Home() {
   if (loading) {
     return <div>Loading...</div>;
   }
+  if (!currentUser) {
+    return <div>Redirecting...</div>;
+  }
 
   const removeItem = async (item) => {
     if (!currentUser) return;
@@ -154,33 +158,34 @@ export default function Home() {
     setOpenRecipe(true);
     setLoadingState(true);
     try {
-      const response = await fetch('/api/getRecipeSuggestions', {
-        method: 'POST',
+      const response = await fetch("/api/getRecipeSuggestions", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ inventory }),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Network response was not ok');
+        throw new Error(errorData.error || "Network response was not ok");
       }
-  
+
       const data = await response.json();
+      console.log(data.recipeSuggestion);
       setRecipes(data.recipeSuggestion);
       setError("");
     } catch (error) {
-      console.error('Error fetching recipe:', error);
+      console.error("Error fetching recipe:", error);
       setError(error.message);
     } finally {
       setLoadingState(false);
     }
-  }
+  };
   const handleCloseRecipe = () => {
     setOpenRecipe(false);
     setRecipes("");
-  }
+  };
 
   function searchItem(item) {
     const filteredList = [];
@@ -263,7 +268,7 @@ export default function Home() {
       <Box
         display="flex"
         justifyContent="space-between"
-        width="max(50vw,355px)"
+        width="max(40vw,355px)"
         bgcolor="#F5F5DC"
         p={2}
         borderRadius={5}
@@ -315,7 +320,7 @@ export default function Home() {
       </Box>
       <Box sx={{ border: 1 }} bgcolor="#F5F5DC">
         <Box
-          width="max(50vw,355px)"
+          width="max(40vw,355px)"
           height="100px"
           bgcolor="#F5F5DC"
           display="flex"
@@ -329,7 +334,7 @@ export default function Home() {
           </Typography>
         </Box>
         <Stack
-          width="max(50vw,355px)"
+          width="max(40vw,355px)"
           height="300px"
           spacing={1}
           overflow="auto"
@@ -344,13 +349,18 @@ export default function Home() {
               justifyContent="space-between"
               bgcolor="#F5F5DC"
               padding={1}
+              sx={{ gap: 2 }} // Add gap for spacing
             >
-              <Typography variant="h5" color="#333" textAlign="center">
-                {name.charAt(0).toUpperCase() + name.slice(1)}
-              </Typography>
-              <Typography variant="h5" color="#333" textAlign="center">
-                {quantity}
-              </Typography>
+              <Box flex={1}>
+                <Typography variant="h5" color="#333" textAlign="left">
+                  {name.charAt(0).toUpperCase() + name.slice(1)}
+                </Typography>
+              </Box>
+              <Box flex={1} display="flex" justifyContent="center">
+                <Typography variant="h5" color="#333">
+                  {quantity}
+                </Typography>
+              </Box>
               <Stack direction="row" spacing={2}>
                 <Button
                   variant="contained"
@@ -416,18 +426,29 @@ export default function Home() {
           boxShadow={24}
           p={4}
           display="flex"
-          textAlign="center"
+          textAlign="left"
           flexDirection="column"
           gap={3}
           sx={{
             transform: "translate(-50%,-50%)",
           }}
         >
-          <Typography variant="h6">{loading ? "Fetching Recipes..." : "Recipe Suggestions"}</Typography>
-          <Stack width="100%" direction="row" spacing={2} height="300px"
-          overflow="auto">
+          <Typography variant="h6" textAlign="center">
+            {loadingState ? "Fetching Recipes..." : "Recipe Suggestions"}
+          </Typography>
+          <Stack
+            width="100%"
+            direction="row"
+            spacing={2}
+            height="300px"
+            overflow="auto"
+          >
             {recipes && (
-              <Typography>{recipes}</Typography>
+              <Typography>
+                <ReactMarkdown remarkPlugins={[remarkGfm]} className="prose">
+                  {recipes}
+                </ReactMarkdown>
+              </Typography>
             )}
             {error && <Typography color="red">{error}</Typography>}
           </Stack>

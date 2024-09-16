@@ -12,3 +12,21 @@ body{
   background-position: 0px 0px, 100% 100%;
   background-blend-mode: overlay;
 }
+
+.prose p {
+  margin-bottom: 16px;
+}
+
+.prose ul {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+
+.prose ol {
+  list-style-type: decimal;
+  padding-left: 20px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
